@@ -65,6 +65,7 @@
         const validPlan = n => Number.isInteger(n) && n >= 60 && n <= 10800 && n % 60 === 0;
         const validCompletion = n => {
           const planned = n.plannedSeconds ?? n.duration ?? 1500;
+          if(n.endedEarly === true && n.elapsedSeconds >= planned)return false;
           return validPlan(planned) && Number.isFinite(n.startedAt) && n.startedAt >= 0 && Number.isFinite(n.completedAt) && n.completedAt >= n.startedAt && n.completedAt <= 253402300799000 && Number.isInteger(n.elapsedSeconds) && n.elapsedSeconds >= 0 && n.elapsedSeconds <= (n.completedAt - n.startedAt) / 1000 + 1 && n.elapsedSeconds * 1000 <= n.completedAt - n.startedAt + 1000 && (n.endedEarly === undefined || typeof n.endedEarly === 'boolean') && (n.endedEarly === true || n.elapsedSeconds >= planned && n.completedAt - n.startedAt >= planned * 1000);
         };
         if (s.focusSeconds !== undefined && !validPlan(s.focusSeconds)) throw Error();

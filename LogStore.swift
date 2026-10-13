@@ -29,6 +29,7 @@ final class LogStore {
             seconds >= 0 && Double(seconds) * 1000 <= wallMilliseconds + 1000
         } ?? (entry.endedEarly != true)
         guard (60...10800).contains(planned), planned % 60 == 0, validExplicitDuration,
+              entry.endedEarly != true || (entry.elapsedSeconds ?? planned) < planned,
               isPause || entry.endedEarly == true || entry.elapsedSeconds == nil || (entry.elapsedSeconds ?? planned) >= planned,
               entry.event == nil || ["pause", "completed"].contains(entry.event!),
               !isPause || (entry.elapsedSeconds != nil && !(entry.sessionId ?? "").trimmingCharacters(in: .whitespacesAndNewlines).isEmpty),

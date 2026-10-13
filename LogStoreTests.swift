@@ -63,20 +63,23 @@ func expect(_ value: @autoclosure () throws -> Bool, _ message: String) throws {
             try earlyStore.save(LogEntry(id:"pause-\(planned)", name:"Pause", note:"", startedAt:0, completedAt:120000, elapsedSeconds:30, event:"pause", sessionId:"session", plannedSeconds:planned))
             try earlyStore.save(LogEntry(id:"early-\(planned)", name:"Early", note:"", startedAt:0, completedAt:0, elapsedSeconds:0, endedEarly:true, plannedSeconds:planned))
         }
-        for (i, values) in [(59,59,59000), (10860,0,0), (61,0,0), (2520,120,2520000), (2520,2520,2519999), (60,61,61000)].enumerated() {
+        for (i, values) in [(59,59,59000), (10860,0,0), (61,0,0), (2520,120,2520000), (2520,2520,2519999), (60,63,61000)].enumerated() {
             let (planned, elapsed, wall) = values
             var rejected = false
             do { try earlyStore.save(LogEntry(id:"bad-custom-\(i)", name:"Bad", note:"", startedAt:0, completedAt:Double(wall), elapsedSeconds:elapsed, plannedSeconds:planned)) } catch { rejected = true }
             try expect(rejected,"reject corrupt custom plan/completion \(i)")
         }
         print("PASS custom plan limits, pause/zero-early and corrupt/full completion validation")
+        try earlyStore.save(LogEntry(id:"overtime", name:"Overtime", note:"", startedAt:0, completedAt:61000, elapsedSeconds:61, plannedSeconds:60))
+        try earlyStore.save(LogEntry(id:"normal-tolerance", name:"Tolerance", note:"", startedAt:0, completedAt:60000, elapsedSeconds:61, plannedSeconds:60))
+        print("PASS overtime completion and normal one-second rounding tolerance")
         let beforeInvalid = try Data(contentsOf: earlyURL)
         for invalid in [
             LogEntry(id: "negative-duration", name: "x", note: "", startedAt: 0, completedAt: 120_000, elapsedSeconds: -1, endedEarly: true),
             LogEntry(id: "over-plan", name: "x", note: "", startedAt: 0, completedAt: 2_000_000, elapsedSeconds: 1501, endedEarly: true),
             LogEntry(id: "over-wall", name: "x", note: "", startedAt: 0, completedAt: 120_000, elapsedSeconds: 122, endedEarly: true),
             LogEntry(id: "normal-negative-duration", name: "x", note: "", startedAt: 0, completedAt: 1_500_000, elapsedSeconds: -1),
-            LogEntry(id: "normal-over-plan", name: "x", note: "", startedAt: 0, completedAt: 1_500_000, elapsedSeconds: 1501),
+            LogEntry(id: "normal-over-wall", name: "x", note: "", startedAt: 0, completedAt: 1_500_000, elapsedSeconds: 1502),
             LogEntry(id: "missing-duration", name: "x", note: "", startedAt: 0, completedAt: 120_000, endedEarly: true),
             LogEntry(id: "backward", name: "x", note: "", startedAt: 120_000, completedAt: 0, elapsedSeconds: 0, endedEarly: true),
             LogEntry(id: "negative-start", name: "x", note: "", startedAt: -1, completedAt: 120_000, elapsedSeconds: 120, endedEarly: true),

@@ -505,7 +505,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandler
             applyScale(level) { [weak self] _, error in
                 guard let self, let settingsWindow = self.settingsWindow else { return }
                 let r = settingsWindow.contentRect(forFrameRect: settingsWindow.frame)
-                checks.append(["scale":level,"width":r.width,"height":r.height,"visible":settingsWindow.isVisible,"ok":error == nil && r.width == 330 && r.height == 410])
+                checks.append(["scale":level,"width":r.width,"height":r.height,"visible":settingsWindow.isVisible,"ok":error == nil && r.width == 330 && r.height == 530])
                 check(levels.dropFirst())
             }
         }

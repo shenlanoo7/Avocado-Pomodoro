@@ -4,7 +4,7 @@ const assert=require('node:assert/strict');
  const context=await browser.newContext();
  await context.addInitScript(()=>{window.messages=[];window.webkit={messageHandlers:{native:{postMessage:m=>messages.push(m)}}};});
  const timer=await context.newPage();await timer.setViewportSize({width:247,height:377});await timer.goto('file:///Users/shenlan/Avocado-Pomodoro/index.html');
- const settings=await context.newPage();await settings.setViewportSize({width:330,height:410});await settings.goto('file:///Users/shenlan/Avocado-Pomodoro/settings.html');
+ const settings=await context.newPage();await settings.setViewportSize({width:330,height:530});await settings.goto('file:///Users/shenlan/Avocado-Pomodoro/settings.html');
  assert.equal(await settings.locator('#language').count(),1,'Settings exposes a language selector');
  await settings.selectOption('#language','zh');assert.ok(await settings.evaluate(()=>messages.some(m=>m.action==='setLanguage'&&m.language==='zh')));
  await timer.evaluate(()=>{applyLanguage('zh');$('name').value='My original task';$('start').click();$('pause').click();$('pauseNote').value='Keep this draft';$('pauseNote').dispatchEvent(new Event('input'));});
