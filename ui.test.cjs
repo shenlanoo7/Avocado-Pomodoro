@@ -1,0 +1,3 @@
+const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs');
+test('settings explains focus duration is chosen on Start rather than fixed25',()=>{const html=fs.readFileSync(__dirname+'/settings.html','utf8');assert.ok(html.includes('Choose focus minutes on Start.'));assert.ok(!html.includes('Focus: 25 min.'));});
+test('dial includes inline name and note, fixed durations and native callbacks',()=>{const html=fs.readFileSync(__dirname+'/index.html','utf8');for(const s of ['id="name"','id="note"','id="dial"','nativeResult','25:00','05:00','alarm','silence','save','localStorage','@keyframes'])assert.ok(html.includes(s),s);assert.ok(!html.includes('prompt('));});

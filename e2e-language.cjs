@@ -1,0 +1,26 @@
+const {chromium}=require('/Users/shenlan/.hermes/cache/scratch/pomodoro-qa/node_modules/playwright');
+const assert=require('node:assert/strict');
+(async()=>{const browser=await chromium.launch();try{
+ const context=await browser.newContext();
+ await context.addInitScript(()=>{window.messages=[];window.webkit={messageHandlers:{native:{postMessage:m=>messages.push(m)}}};});
+ const timer=await context.newPage();await timer.setViewportSize({width:247,height:377});await timer.goto('file:///Users/shenlan/Avocado-Pomodoro/index.html');
+ const settings=await context.newPage();await settings.setViewportSize({width:330,height:410});await settings.goto('file:///Users/shenlan/Avocado-Pomodoro/settings.html');
+ assert.equal(await settings.locator('#language').count(),1,'Settings exposes a language selector');
+ await settings.selectOption('#language','zh');assert.ok(await settings.evaluate(()=>messages.some(m=>m.action==='setLanguage'&&m.language==='zh')));
+ await timer.evaluate(()=>{applyLanguage('zh');$('name').value='My original task';$('start').click();$('pause').click();$('pauseNote').value='Keep this draft';$('pauseNote').dispatchEvent(new Event('input'));});
+ assert.equal(await timer.locator('#pause').textContent(),'继续');assert.equal(await timer.locator('#mode').textContent(),'专注');
+ const before=await timer.evaluate(()=>JSON.stringify(timer));await timer.evaluate(()=>applyLanguage('en'));
+ assert.equal(await timer.locator('#pause').textContent(),'Resume');assert.equal(await timer.evaluate(()=>JSON.stringify(timer)),before);assert.equal(await timer.locator('#pauseNote').inputValue(),'Keep this draft');
+ await timer.evaluate(()=>applyLanguage('zh'));await timer.reload();assert.equal(await timer.locator('#pause').textContent(),'继续');
+ await timer.evaluate(()=>{timer=new Timer();render();$('name').click();receiveTimerTasks({ok:true,tasks:[]});});assert.ok((await timer.locator('#namePicker').innerText()).includes('使用自定义名称'));
+ await timer.evaluate(()=>{timer.start('Original task',Date.now()-1500001);timer.deadline=Date.now()-1;tickTimer();$('note').value='Original completion draft';$('note').dispatchEvent(new Event('input'));});
+ assert.equal(await timer.locator('#finished h2').textContent(),'专注完成');assert.ok((await timer.locator('#doneDuration').textContent()).includes('分钟'));
+ await timer.evaluate(()=>{applyLanguage('en');$('log').click();nativeResult({ok:false,id:savingCompletionId,error:'disk error'});applyLanguage('zh');});
+ assert.equal(await timer.locator('#feedback').textContent(),'保存失败：disk error');assert.equal(await timer.locator('#note').inputValue(),'Original completion draft');
+ await timer.evaluate(()=>{applyLanguage('en');applyLanguage('zh');});assert.equal(await timer.locator('#log').textContent(),'保存');
+ const checklist=await context.newPage();await checklist.goto('file:///Users/shenlan/Avocado-Pomodoro/checklist.html');await checklist.evaluate(()=>{applyLanguage('zh');receiveTasks({ok:true,tasks:[]});});assert.equal(await checklist.locator('#empty').textContent(),'未找到 Markdown 任务。');assert.equal(await checklist.locator('#filter option[value=open]').textContent(),'未完成');
+ await settings.evaluate(()=>applyPreferences({skin:'kirby',muted:true,language:'zh'}));assert.equal(await settings.locator('#sound').textContent(),'关');assert.equal(await settings.locator('#done').textContent(),'完成');
+ assert.ok(await settings.evaluate(()=>[...document.querySelectorAll('#panel button,#panel select,.hint')].every(e=>e.getBoundingClientRect().bottom<=innerHeight)),'Chinese settings fit');
+ await settings.evaluate(()=>applyPreferences({skin:'avocado',muted:false,language:'en'}));assert.equal(await settings.locator('#done').textContent(),'Done');
+ console.log('PASS language selector, bridge, live translation, reload persistence, unchanged timer/drafts, picker, checklist and panel bounds');
+}finally{await browser.close();}})().catch(e=>{console.error(e);process.exit(1);});

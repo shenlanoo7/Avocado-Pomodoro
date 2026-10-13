@@ -1,0 +1,13 @@
+const {chromium}=require('/Users/shenlan/.hermes/cache/scratch/pomodoro-qa/node_modules/playwright');const assert=require('node:assert/strict');
+(async()=>{const b=await chromium.launch();try{
+ const p=await b.newPage({viewport:{width:247,height:377}});await p.addInitScript(()=>{window.messages=[];window.webkit={messageHandlers:{native:{postMessage:m=>messages.push(m)}}};});await p.goto('file://'+__dirname+'/index.html');
+ await p.evaluate(()=>{$('name').value='Single focus';$('focusMinutes').value='42';$('start').click();timer.startedAt=Date.now()-2520001;timer.deadline=Date.now()-1;tickTimer();});
+ assert.equal(await p.evaluate(()=>timer.mode),'break');assert.equal(await p.evaluate(()=>timer.duration),300);assert.equal(await p.evaluate(()=>timer.pendingNotes[0].plannedSeconds),2520);
+ await p.locator('#note').fill('Retained note');await p.evaluate(()=>{timer.deadline=Date.now()-1;tickTimer();});assert.equal(await p.evaluate(()=>timer.state),'completed');assert.equal(await p.evaluate(()=>timer.mode),'break');
+ await p.reload();assert.equal(await p.evaluate(()=>timer.state),'completed');assert.equal(await p.evaluate(()=>timer.mode),'break');assert.equal(await p.locator('#note').inputValue(),'Retained note');
+ await p.locator('#backTimer').click();assert.equal(await p.locator('#breakDone').isVisible(),true);await p.evaluate(()=>tickTimer(Date.now()+36000000));assert.equal(await p.evaluate(()=>timer.state),'completed');
+ await p.locator('#again').click();assert.equal(await p.locator('#setup').isVisible(),true);assert.equal(await p.evaluate(()=>timer.pendingNotes.length),1);await p.locator('#setupNotes').click();await p.locator('#log').click();const save=await p.evaluate(()=>messages.find(m=>m.action==='save'));assert.equal(save.plannedSeconds,2520);assert.equal(save.note,'Retained note');await p.evaluate(id=>nativeResult({ok:true,id}),save.id);assert.equal(await p.evaluate(()=>timer.state),'idle');
+ assert.equal(await p.locator('body').innerText().then(t=>/GROUP|LONG REST|4 ×/.test(t)),false);
+ const settings=await b.newPage({viewport:{width:330,height:410}});await settings.addInitScript(()=>{window.messages=[];window.webkit={messageHandlers:{native:{postMessage:m=>messages.push(m)}}};});await settings.goto('file://'+__dirname+'/settings.html');assert.equal(await settings.locator('#count,#longMinutes,#shortMinutes').count(),0);assert.equal(await settings.locator('#restMinutes').count(),0);
+ console.log('PASS single focus → automatic rest → stopped; reload and notes preserved; manual next; no group settings');
+}finally{await b.close();}})().catch(e=>{console.error(e);process.exit(1)});

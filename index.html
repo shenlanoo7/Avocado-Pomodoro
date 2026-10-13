@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Avocado Pomodoro</title>
+<style>
+:root{--ink:#11152f;--cream:#f6ff87;--pit:#65412d;--paper:#fff7df}*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:transparent}body{font-family:Menlo,'PingFang SC',monospace;color:var(--paper);user-select:none}.widget{position:relative;width:380px;height:580px;transform-origin:top left}svg{position:absolute;left:32px;top:24px;width:316px;height:512px;shape-rendering:crispEdges;cursor:grab}#dial{position:absolute;left:89px;top:292px;width:202px;height:202px;border:4px solid var(--ink);border-radius:50%;background:var(--pit);box-shadow:inset 8px 0 #744c30;display:flex;align-items:center;justify-content:center;text-align:center;overflow:hidden}#dial::before{content:'';position:absolute;inset:0;background:conic-gradient(from 0deg,#cba66c55 var(--progress,0%),transparent 0);pointer-events:none}section{position:relative;width:172px;padding:4px 0}section[hidden]{display:none}h1,h2,p{margin:0}h2{font-size:13px;letter-spacing:2px;margin-bottom:8px}label{font-size:10px;color:#f7dfb9;display:block;margin-bottom:5px}input,textarea{user-select:text;font:12px Menlo,'PingFang SC',monospace;color:var(--paper);background:#38271955;border:1px solid #c5a57f;border-radius:0;outline:none;text-align:center;width:152px}input:focus,textarea:focus{border-color:var(--cream);box-shadow:0 0 0 1px var(--cream)}input{height:29px;padding:4px}textarea{height:43px;resize:none;padding:5px;margin-top:5px;text-align:left}button{font:11px Menlo,'PingFang SC',monospace;border:2px solid var(--ink);border-radius:0;padding:6px 9px;cursor:pointer;color:var(--ink);background:var(--cream);box-shadow:2px 2px 0 var(--ink)}button:hover{filter:brightness(1.12)}button:active{transform:translate(1px,1px);box-shadow:none}button:focus-visible{outline:2px solid white;outline-offset:3px}button:disabled{opacity:.5;cursor:wait}.secondary{background:var(--paper)}.actions{display:flex;justify-content:center;gap:7px;margin-top:9px}.time{font-size:33px;letter-spacing:1px;font-weight:900;text-shadow:2px 2px var(--ink);font-variant-numeric:tabular-nums;margin:8px 0}.task{font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 8px}.tiny{font-size:10px;color:#e3c9a5}.badge{font-size:10px;letter-spacing:2px;color:var(--cream)}#feedback{position:absolute;top:542px;left:25px;width:330px;text-align:center;font-size:11px;color:var(--paper);background:var(--ink);padding:6px;display:none}.flash{animation:alarm 1s steps(2,end) infinite}@keyframes alarm{50%{background:#96743a;box-shadow:0 0 0 8px #f6ff8777}}.footer{position:absolute;top:517px;left:0;width:380px;text-align:center;font-size:10px;color:#f9ffe7;text-shadow:1px 1px #11152f}.finish h2{margin:0 0 4px;font-size:12px}.finish .actions{margin-top:5px}.finish button{padding:4px 7px}.finish .task{font-size:10px}.finish .tiny{font-size:9px}.rest .time{font-size:29px}@media(prefers-reduced-motion:reduce){.flash{animation:none;border-color:var(--cream)}}
+.widget{transform:scale(var(--scale,.65))}#end{background:var(--paper);padding:6px 7px}
+#body g[hidden]{display:none}:root[data-skin="kirby"]{--cream:#ffc1d3;--pit:#713447}#body[data-skin="kirby"]~#dial{box-shadow:inset 8px 0 #854054}
+#body[data-skin="kirby"]{left:0;width:380px}#body[data-skin="kirby"]~#dial section{z-index:1}#body[data-skin="kirby"]~#dial::after{content:'';position:absolute;pointer-events:none;bottom:5px;left:48px;width:98px;height:27px;background:#ea7fa1;border-top:4px solid #11152f;clip-path:polygon(0 42%,8% 42%,8% 22%,20% 22%,20% 9%,35% 9%,35% 0,65% 0,65% 9%,80% 9%,80% 22%,92% 22%,92% 42%,100% 42%,100% 100%,0 100%)}
+
+#contextMenu{position:fixed;z-index:20;padding:4px;background:#202039;border:3px solid var(--paper);box-shadow:4px 4px 0 var(--ink)}#contextMenu[hidden]{display:none}#contextMenu button{display:block;font-size:14px;width:105px;text-align:left;box-shadow:none}#contextMenu button+button{margin-top:4px}
+
+#active.isPaused .time{font-size:24px}#active.isPaused .actions{gap:5px;margin-top:6px}#active.isPaused button,#active.isPaused #end{font-size:10px;padding:5px 4px}#pauseNote{height:40px;margin-top:4px}#pauseNote[hidden],#pauseSave[hidden]{display:none}
+button[hidden]{display:none}#pendingNotes{font-size:9px;padding:3px 6px;margin-top:7px}#finished .actions{gap:5px;margin-top:6px}#finished button{font-size:10px;padding:5px 7px}#finished h2{margin-bottom:4px}#noteLive{font-size:8px;margin-top:3px}#setupNotes{font-size:9px;padding:6px 5px}
+.minutes{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:5px}.minutes label{margin:0}.minutes input{width:58px;height:23px;padding:2px}#setup h2{margin-bottom:5px}#setup .actions{margin-top:6px}
+#namePicker{position:fixed;z-index:30;left:8px;width:231px;max-height:160px;overflow:auto;padding:5px;background:#202039;border:2px solid var(--paper);box-shadow:2px 2px var(--ink);font-size:10px}#namePicker[hidden]{display:none}#namePicker button{display:block;width:100%;text-align:left;font-size:10px;padding:5px;box-shadow:none;margin-bottom:3px;overflow-wrap:anywhere}#namePicker small{display:block;font-size:8px;opacity:.8;margin-top:3px}#namePicker p{padding:5px}
+#focusPrompt{position:fixed;z-index:25;left:14px;right:14px;top:12px;padding:12px 14px;max-height:114px;overflow:visible;color:var(--paper);background:#202039;border:3px solid var(--paper);box-shadow:4px 4px 0 var(--ink);font-size:12px;line-height:1.6;overflow-wrap:anywhere;user-select:text}#focusPrompt[hidden]{display:none}#focusPrompt span{color:var(--cream);float:left;margin-right:8px}#focusPrompt p{margin:0;max-height:84px;overflow:auto}#focusPrompt::after{content:'';position:absolute;left:28px;bottom:-8px;width:12px;height:8px;background:var(--paper);clip-path:polygon(0 0,100% 0,100% 50%,50% 50%,50% 100%,0 100%)}
+</style>
+<div class="widget"><svg id="body" viewBox="0 0 26 42" aria-label="Pixel avocado. Drag to move. Double-click to hide."><g id="avocadoArt"><path fill="#11152f" d="M7 0h4v1h1v2h1v3h1V3h2V1h3V0h3v3h-3v2h-2v2h-6V5H9V3H7z M10 7h6v1h2v2h1v2h1v2h1v2h1v2h1v3h1v3h1v10h-1v3h-1v2h-1v1h-2v1H6v-1H4v-1H3v-2H2v-3H1V24h1v-3h1v-3h1v-2h1v-2h1v-2h1v-2h1V8h2z"/><path fill="#448234" d="M8 1h2v2h1v2h1v1h3V4h2V2h3v1h-2v2h-2v2h-5V5h-1V3H8z M10 8h6v1h2v2h1v2h1v2h1v3h1v3h1v3h1v10h-1v3h-1v2h-2v1H6v-1H4v-2H3v-3H2V24h1v-3h1v-3h1v-3h1v-2h1v-2h1V9h2z"/><path fill="#dafa62" d="M10 9h6v1h2v2h1v3h1v3h1v3h1v3h1v10h-1v3h-2v2H6v-2H4v-3H3V24h1v-3h1v-3h1v-3h1v-3h1v-2h2z"/><path fill="#f6ff87" d="M10 10h6v1h1v2h1v3h1v3h1v4h1v12h-1v2H6v-2H5V24h1v-4h1v-4h1v-3h1v-2h1z"/><path fill="#d0dd54" d="M13 11h1v1h-1z M7 20h1v1H7z M19 21h1v1h-1z M5 30h1v1H5z M8 24h1v1H8z M17 16h1v1h-1z"/><path fill="#11152f" d="M7 15h3v4H7z M16 15h3v4h-3z M12 19h2v1h-2z"/><path fill="#fff" d="M8 15h1v1H8z M17 15h1v1h-1z"/><path fill="#f47995" d="M6 18h2v2H6z M18 18h2v2h-2z"/></g><g id="kirbyArt" style="display:none">
+<path fill="#11152f" d="M3 21h3v9H3v-1H1v-2H0v-4h1v-1h2z M20 21h3v1h2v1h1v4h-1v2h-2v1h-3z M4 37h6v1h1v3H9v1H2v-1H1v-2h1v-1h2z M16 37h6v1h2v1h1v2h-1v1h-7v-1h-2v-3h1z"/>
+<path fill="#dc4b79" d="M3 22h2v6H3v-1H1v-3h1v-1h1z M21 22h2v1h1v1h1v3h-2v1h-2z M4 38h5v1h1v1H8v1H2v-2h2z M17 38h5v1h2v2h-6v-1h-2v-1h1z"/>
+<path fill="#11152f" d="M7 10h12v1h3v2h2v3h2v4h1v13h-1v3h-3v2h-4v1H7v-1H3v-2H0v-3h-1V20h1v-4h2v-3h2v-2h3z"/>
+<path fill="#ec78a3" d="M7 11h12v1h3v2h2v3h1v4h1v12h-1v3h-3v1h-4v1H8v-1H4v-2H1v-3H0V21h1v-4h2v-3h2v-2h2z"/>
+<path fill="#ffb6d2" d="M7 12h12v1h2v2h2v3h1v5h1v10h-1v2h-3v2H6v-2H2v-3H1V22h1v-4h2v-3h2v-2h1z"/>
+<path fill="#ffd7e5" d="M8 13h9v1H8z M6 15h2v1H6z M5 17h1v2H5z"/>
+<path fill="#11152f" d="M8 15h2v1h1v5h-1v1H8v-1H7v-5h1z M16 15h2v1h1v5h-1v1h-2v-1h-1v-5h1z"/>
+<path fill="#fff7ef" d="M8 16h2v2H8z M16 16h2v2h-2z"/>
+<path fill="#5b8dc8" d="M8 20h2v1H8z M16 20h2v1h-2z"/>
+<path fill="#f36b9b" d="M5 20h2v2H5z M19 20h2v2h-2z"/>
+<g id="kirbyHands">
+<path fill="#11152f" d="M0 19h3v1h1v2h1v5H4v1H1v-1h-2v-2h-1v-4h1v-1h1z M23 19h3v1h1v1h1v4h-1v2h-2v1h-3v-1h-1v-5h1v-2h1z"/>
+<path fill="#ec78a3" d="M0 20h3v2h1v4H3v1H1v-1h-2v-4h1z M23 20h3v2h1v4h-2v1h-2v-1h-1v-4h1z"/>
+<path fill="#ffb6d2" d="M0 21h2v1h1v3H1v-1H0z M24 21h2v3h-1v1h-2v-3h1z"/>
+<path fill="#ffd7e5" d="M0 21h1v2H0z M25 21h1v2h-1z"/>
+</g></g></svg>
+<div hidden id="settings" aria-labelledby="settingsTitle"><h2 id="settingsTitle">Pomodoro Settings</h2><label for="skin">Skin</label><select id="skin"><option value="avocado">Avocado</option><option value="kirby">Kirby</option></select><label for="scale">Size</label><input type="hidden" id="scale" value="0.65"><label for="mute">Completion sound</label><button id="mute" aria-pressed="false">On</button><p class="settingsHint">Double-click to hide · drag to move</p><button id="settingsDone">Done</button></div>
+<div id="dial">
+<section id="setup"><h2>ONE MORE BITE</h2><label for="name">What will you focus on?</label><input id="name" maxlength="120" placeholder="Name your session" autocomplete="off"><div class="minutes"><label for="focusMinutes">Minutes</label><input id="focusMinutes" type="number" min="1" max="180" step="1" value="25" required></div><p class="tiny" id="sequenceHint" style="margin-top:5px">5 MIN REST AFTER FOCUS</p><div class="actions"><button id="start">Start Focus</button><button id="setupNotes" hidden>Notes</button></div></section>
+<section id="active" hidden><div class="badge" id="mode">FOCUS</div><p class="task" id="task"></p><div class="time" id="time">25:00</div><textarea id="pauseNote" hidden maxlength="4000" aria-label="Pause note (optional)" placeholder="Pause note (optional)"></textarea><div class="actions"><button id="pauseSave" hidden title="Save this pause without ending the session">Save Note</button><button id="pause">Pause</button><button id="end" title="End session and record a note">End</button></div><button id="pendingNotes" hidden>Notes</button></section>
+<section id="finished" class="finish" hidden><h2>COMPLETED</h2><p class="tiny" id="doneDuration">25 MIN · 25:00 DONE</p><p class="task" id="doneName"></p><p id="noteLive" class="tiny"></p><textarea id="note" maxlength="4000" aria-label="Session note (optional)" placeholder="Add a note (optional)"></textarea><div class="actions"><button id="log">Save</button><button id="skip" class="secondary">Skip</button><button id="backTimer" hidden>Timer</button></div></section>
+<section id="restReady" class="rest" hidden><h2>NICE WORK!</h2><p class="tiny">Rest your eyes and mind</p><div class="time" id="restDuration">05:00</div><div class="actions"><button id="rest">Start Rest</button><button id="next" class="secondary">Next</button></div></section>
+<section id="focusChoice" hidden><h2>TIME IS UP</h2><p class="tiny">Rest or keep your flow</p><div class="time">00:00</div><div class="actions"><button id="chooseRest">Rest</button><button id="keepGoing" class="secondary">Keep Going</button></div></section>
+<section id="breakDone" hidden><h2>REST COMPLETE</h2><div class="time">00:00</div><div class="actions"><button id="again">Next</button></div></section>
+</div><p id="feedback" role="status"></p></div>
+<div id="contextMenu" role="menu" hidden><button id="openChecklist" role="menuitem">Checklist</button><button id="openSettings" role="menuitem">Settings…</button></div>
+<div id="focusPrompt" role="status" hidden><span aria-hidden="true">◆</span><p id="promptText"></p></div>
+<div id="namePicker" role="listbox" aria-label="Choose a vault task or custom name" hidden></div>
+<script src="i18n.js"></script><script src="core.js"></script><script>
+const $=id=>document.getElementById(id),sections=['setup','active','finished','restReady','breakDone','focusChoice'];let timer=Timer.restore(localStorage.getItem('avocado.timer')),muted=localStorage.getItem('avocado.muted')==='true',saving=false,pauseSavingId=null,savingCompletionId=null,showNotes=timer.pendingNotes.length>0;
+localStorage.removeItem('avocado.restMinutes');localStorage.removeItem('avocado.sequence');
+let selectedPrompt=null;
+function promptCandidates(){try{const items=JSON.parse(localStorage.getItem('avocado.prompts')||'[]');return Array.isArray(items)?items.filter(s=>typeof s==='string'&&s.trim()):[];}catch{return [];}}
+window.applyPrompts=items=>{localStorage.setItem('avocado.prompts',JSON.stringify(items));if(timer.state==='idle'){selectedPrompt=null;if(!$('focusPrompt').hidden)showPrompt();}};
+function showPrompt(){if(timer.state!=='idle'||$('setup').hidden)return;if(selectedPrompt===null){const items=promptCandidates();selectedPrompt=items.length?items[Math.floor(Math.random()*items.length)]:t('One small step. You have got this.');}$('promptText').textContent=selectedPrompt;$('focusPrompt').hidden=false;}
+$('chooseRest').onclick=()=>{if(timer.advance()){silence();showNotes=true;$('note').value=completionSnapshot()?.note||'';persist();native('reveal');render();}};
+$('keepGoing').onclick=()=>{if(timer.keepGoing()){silence();showNotes=false;persist();render();}};
+function completionSnapshot(){return timer.pendingNotes[0]||(timer.state==='completed'&&timer.mode==='focus'&&!timer.resolved?timer:null);}
+function native(action,extra={}){const payload={action,...extra};if(window.webkit?.messageHandlers?.native)window.webkit.messageHandlers.native.postMessage(payload);else if(action==='save')window.nativeResult({ok:false,id:payload.id,error:t('Open the desktop app to save notes')});}
+function persist(){localStorage.setItem('avocado.timer',JSON.stringify(timer));}
+window.applyScale=()=>{document.documentElement.style.setProperty('--scale',.65);$('scale').value='0.65';};
+applyScale();
+function applySkin(skin){if(!['avocado','kirby'].includes(skin))skin='avocado';document.documentElement.dataset.skin=skin;$('body').dataset.skin=skin;$('body').setAttribute('viewBox',skin==='kirby'?'-3 0 32 42':'0 0 26 42');$('body').setAttribute('aria-label',t(skin==='kirby'?'Pixel Kirby. Drag to move. Double-click to hide.':'Pixel avocado. Drag to move. Double-click to hide.'));$('avocadoArt').style.display=skin==='avocado'?'':'none';$('kirbyArt').style.display=skin==='kirby'?'':'none';$('skin').value=skin;localStorage.setItem('avocado.skin',skin);}
+$('skin').onchange=()=>applySkin($('skin').value);
+applySkin(localStorage.getItem('avocado.skin')||'avocado');
+function formatTime(n){return String(Math.floor(n/60)).padStart(2,'0')+':'+String(n%60).padStart(2,'0');}
+let feedbackMessage=null;
+function notify(key,values={}){feedbackMessage={key,values};$('feedback').textContent=t(key,values);$('feedback').style.display='block';setTimeout(()=>{$('feedback').style.display='none';},6000);}
+function silence(){native('silence');$('dial').classList.remove('flash');}
+function alarm(){native('reveal');$('dial').classList.add('flash');if(!muted)native('alarm');}
+function render(){
+  let view='setup';
+  if(timer.state==='running'||timer.state==='paused')view='active';
+  else if(timer.state==='completed')view=timer.mode==='focus'?(timer.awaitingChoice?'focusChoice':timer.resolved?'restReady':'finished'):'breakDone';
+  const snapshot=completionSnapshot();if(showNotes&&snapshot&&!timer.awaitingChoice)view='finished';
+  sections.forEach(id=>$(id).hidden=id!==view);
+  if(view!=='setup')$('focusPrompt').hidden=true;
+  const phase=t(timer.mode==='break'?'REST':timer.overtime?'EXTRA FOCUS':'FOCUS');
+  $('mode').textContent=phase;
+  $('task').textContent=timer.name;
+  $('doneName').textContent='“'+(snapshot?.name||timer.name)+'”';
+  $('doneDuration').textContent=t('{minutes} MIN · {time} DONE',{minutes:(snapshot?.plannedSeconds??snapshot?.duration??1500)/60,time:formatTime(snapshot?.elapsedSeconds??1500)});
+  const n=timer.state==='idle'?0:timer.remaining();$('time').textContent=(n<0?'+':'')+formatTime(Math.abs(n));
+  $('noteLive').textContent=['running','paused'].includes(timer.state)?t('{phase} {time} · {count} {notes}',{phase,time:(n<0?'+':'')+formatTime(Math.abs(n)),count:timer.pendingNotes.length,notes:timer.pendingNotes.length===1?'NOTE':'NOTES'}):'';
+  $('backTimer').hidden=!timer.pendingNotes.length;
+  $('setupNotes').hidden=!timer.pendingNotes.length;
+  $('pendingNotes').hidden=!timer.pendingNotes.length||timer.state==='paused';
+  $('pendingNotes').textContent=t('Notes ({count})',{count:timer.pendingNotes.length});
+  $('sequenceHint').textContent=t('Rest or keep going at the bell');
+  $('restDuration').textContent=formatTime(300);
+  $('pause').textContent=t(timer.state==='paused'?'Resume':'Pause');
+  const pauseView=timer.state==='paused'&&timer.mode==='focus';$('active').classList.toggle('isPaused',pauseView);
+  $('pauseNote').hidden=!pauseView;$('pauseNote').readOnly=!!timer.pauseNoteSaved||!!pauseSavingId;
+  $('pauseSave').hidden=!pauseView;$('pauseSave').disabled=!!pauseSavingId||!!timer.pauseNoteSaved;$('pauseSave').textContent=t(timer.pauseNoteSaved?'Saved':'Save Note');
+  $('pause').disabled=!!pauseSavingId;$('end').disabled=!!pauseSavingId;
+  $('dial').style.setProperty('--progress',timer.state==='idle'?'0%':(Math.min(1,Math.max(0,1-n/timer.duration))*100)+'%');
+  $('mute').textContent=t(muted?'Off':'On');$('mute').setAttribute('aria-pressed',String(!muted));
+}
+function resolve(){if(timer.pendingNotes.length)timer.pendingNotes.shift();else timer.resolved=true;showNotes=timer.pendingNotes.length>0;persist();silence();$('note').value=completionSnapshot()?.note||'';localStorage.removeItem('avocado.note');render();}
+function reset(){silence();const pending=timer.pendingNotes;timer=new Timer();timer.pendingNotes=pending;selectedPrompt=null;showNotes=false;persist();render();$('name').focus();}
+$('name').value=localStorage.getItem('avocado.name')||'';$('note').value=completionSnapshot()?.note||localStorage.getItem('avocado.note')||'';
+let timerTasks=[],pickerStatus='loading',taskQuery='';
+function closeNamePicker(){$('namePicker').hidden=true;$('name').setAttribute('aria-expanded','false');}
+function renderNamePicker(){
+  const panel=$('namePicker'),focusedSearch=document.activeElement?.id==='taskSearch',selection=focusedSearch?document.activeElement.selectionStart:0;
+  panel.replaceChildren();
+  const search=document.createElement('input');search.id='taskSearch';search.type='search';search.placeholder=t('Search tasks');search.setAttribute('aria-label',t('Search tasks'));search.value=taskQuery;search.oninput=()=>{taskQuery=search.value;renderNamePicker();};panel.append(search);
+  const custom=document.createElement('button');custom.type='button';custom.setAttribute('role','option');custom.textContent=t('Use custom name');custom.onclick=()=>{$('name').focus();closeNamePicker();};panel.append(custom);
+  const query=taskQuery.toLowerCase().trim(),open=timerTasks.filter(t=>!t.checked&&typeof t.text==='string'&&t.text.trim()),matches=open.filter(t=>[t.text,t.path,t.heading].join(' ').toLowerCase().includes(query));
+  for(const task of matches){const option=document.createElement('button');option.type='button';option.setAttribute('role','option');const text=document.createElement('span');text.textContent=task.text;option.append(text);const source=document.createElement('small');source.textContent=[task.path,task.heading].filter(Boolean).join(' · ');option.append(source);option.onclick=()=>{$('name').value=task.text.slice(0,120);localStorage.setItem('avocado.name',$('name').value);$('name').focus();closeNamePicker();};panel.append(option);}
+  if(pickerStatus||!matches.length){const status=document.createElement('p');status.textContent=pickerStatus==='loading'?t('Loading tasks…'):pickerStatus?t('Tasks could not load: {error} · use a custom name',{error:pickerStatus}):t(open.length?'No matching tasks · clear search to see all':'No open checklist tasks · use a custom name');panel.append(status);}
+  const r=$('name').getBoundingClientRect();panel.style.top='134px';panel.style.maxHeight=Math.max(55,r.top-142)+'px';
+  if(focusedSearch){search.focus();search.setSelectionRange?.(selection,selection);}
+}
+window.receiveTimerTasks=result=>{timerTasks=result.ok&&Array.isArray(result.tasks)?result.tasks:[];pickerStatus=result.ok?'':(result.error||t('Check access to the checklist vault'));if(!$('namePicker').hidden)renderNamePicker();};
+$('name').setAttribute('aria-controls','namePicker');$('name').setAttribute('aria-expanded','false');
+function openNamePicker(){if(timer.state!=='idle'||!$('namePicker').hidden)return;taskQuery='';$('namePicker').hidden=false;$('name').setAttribute('aria-expanded','true');pickerStatus='loading';renderNamePicker();native('loadTimerTasks');}
+$('name').onclick=$('name').onfocus=()=>{showPrompt();openNamePicker();};
+$('name').oninput=()=>{localStorage.setItem('avocado.name',$('name').value);};$('note').oninput=()=>{silence();const snapshot=completionSnapshot();if(snapshot){snapshot.note=$('note').value;persist();}localStorage.setItem('avocado.note',$('note').value);};$('note').onfocus=silence;
+$('focusMinutes').oninput=render;
+$('start').onclick=()=>{if(!$('focusMinutes').checkValidity()){$('focusMinutes').reportValidity();return;}closeNamePicker();$('focusPrompt').hidden=true;timer.start($('name').value,Date.now(),undefined,Number($('focusMinutes').value));showNotes=false;persist();native('reveal');render();};$('name').onkeydown=$('focusMinutes').onkeydown=e=>{if(e.key==='ArrowDown'&&!$('namePicker').hidden){e.preventDefault();$('namePicker').querySelector('button')?.focus();}else if(e.key==='Enter'){closeNamePicker();$('start').click();}};
+$('namePicker').onkeydown=e=>{const options=[...$('namePicker').querySelectorAll('button')],i=options.indexOf(document.activeElement);if(e.key==='ArrowDown'||e.key==='ArrowUp'){e.preventDefault();options[(i+(e.key==='ArrowDown'?1:-1)+options.length)%options.length]?.focus();}};
+document.addEventListener('mousedown',e=>{if(!e.target.closest('#namePicker,#name'))closeNamePicker();});
+$('backTimer').onclick=()=>{showNotes=false;render();};$('pendingNotes').onclick=$('setupNotes').onclick=()=>{showNotes=true;$('note').value=completionSnapshot()?.note||'';render();};
+$('pauseNote').value=timer.pauseNoteDraft||'';
+$('pauseNote').oninput=()=>{timer.pauseNoteDraft=$('pauseNote').value;persist();};
+$('pause').onclick=()=>{if(timer.state==='paused')timer.resume();else {timer.pause();$('pauseNote').value='';}showNotes=false;persist();render();};
+$('pauseSave').onclick=()=>{if(timer.state!=='paused'||timer.mode!=='focus'||pauseSavingId||timer.pauseNoteSaved)return;if(!timer.pauseEventId){timer.pausedAt=Date.now();timer.pauseElapsedSeconds=timer.duration-timer.pausedRemaining;timer.pauseEventId=timer.id+'-pause-restored';persist();}pauseSavingId=timer.pauseEventId;render();native('save',{id:pauseSavingId,sessionId:timer.id,event:'pause',name:timer.name,note:$('pauseNote').value,startedAt:timer.startedAt,completedAt:timer.pausedAt,plannedSeconds:timer.duration,elapsedSeconds:timer.pauseElapsedSeconds});};
+$('end').onclick=()=>{if(timer.finish()){if(timer.mode==='focus'&&timer.pendingNotes.length){timer.pendingNotes.push({id:timer.id,name:timer.name,startedAt:timer.startedAt,completedAt:timer.completedAt,plannedSeconds:timer.duration,elapsedSeconds:timer.elapsedSeconds,endedEarly:timer.endedEarly,note:''});timer.resolved=true;}showNotes=timer.mode==='focus';$('note').value=completionSnapshot()?.note||'';persist();render();alarm();}};
+$('log').onclick=()=>{const snapshot=completionSnapshot();if(saving||!snapshot)return;silence();saving=true;savingCompletionId=snapshot.id;$('log').disabled=true;$('skip').disabled=true;native('save',{id:snapshot.id,sessionId:snapshot.id,event:'completed',name:snapshot.name,note:$('note').value,startedAt:snapshot.startedAt,completedAt:snapshot.completedAt,plannedSeconds:snapshot.plannedSeconds??snapshot.duration??1500,elapsedSeconds:snapshot.elapsedSeconds??1500,endedEarly:snapshot.endedEarly??false});};
+window.nativeResult=result=>{if(pauseSavingId&&result.id===pauseSavingId){pauseSavingId=null;if(result.ok){timer.pauseNoteSaved=true;persist();notify('Pause note saved');}else notify('Save failed: {error}',{error:result.error});render();return;}if(!saving||(result.id&&result.id!==savingCompletionId))return;saving=false;savingCompletionId=null;$('log').disabled=false;$('skip').disabled=false;if(result.ok){resolve();notify('Saved to pomodoro-log.md');}else notify('Save failed: {error}',{error:result.error});};
+$('skip').onclick=resolve;$('rest').onclick=()=>{timer.break();showNotes=false;persist();native('reveal');render();};$('next').onclick=reset;$('again').onclick=reset;
+window.applyMuted=value=>{muted=!!value;localStorage.setItem('avocado.muted',String(muted));if(muted)native('silence');render();};$('mute').onclick=()=>applyMuted(!muted);
+window.openSettings=()=>{$('contextMenu').hidden=true;native('settings');};
+$('openSettings').onclick=openSettings;$('openChecklist').onclick=()=>{$('contextMenu').hidden=true;native('checklist');};
+let dragStart=null;
+$('body').onmousedown=e=>{if(e.button===0)dragStart={x:e.clientX,y:e.clientY};};
+document.addEventListener('mousemove',e=>{if(dragStart&&(e.buttons&1)&&Math.hypot(e.clientX-dragStart.x,e.clientY-dragStart.y)>4){dragStart=null;native('drag');}});
+document.addEventListener('mouseup',()=>{dragStart=null;});
+document.querySelector('.widget').addEventListener('dblclick',e=>{if(e.button!==0||e.target.closest('input,textarea,button,select,a,[contenteditable],#settings'))return;e.preventDefault();dragStart=null;closeNamePicker();$('contextMenu').hidden=true;persist();native('hide');});
+
+document.querySelector('.widget').addEventListener('contextmenu',e=>{if(e.target.closest('dialog'))return;e.preventDefault();$('contextMenu').style.left=Math.max(4,Math.min(e.clientX,innerWidth-126))+'px';$('contextMenu').style.top=Math.max(4,Math.min(e.clientY,innerHeight-82))+'px';$('contextMenu').hidden=false;});
+document.addEventListener('mousedown',e=>{if(!e.target.closest('#contextMenu'))$('contextMenu').hidden=true;});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){$('contextMenu').hidden=true;closeNamePicker();$('name').blur();}});
+function tickTimer(now=Date.now()){if(timer.tick(now)){showNotes=false;alarm();persist();render();}else if(timer.state==='running')render();}
+document.addEventListener('languagechange',()=>{if(feedbackMessage)$('feedback').textContent=t(feedbackMessage.key,feedbackMessage.values);render();applySkin($('skin').value);if(!$('namePicker').hidden)renderNamePicker();});
+native('languageReady',{language:uiLanguage()});
+setInterval(()=>tickTimer(),200);
+tickTimer();if(timer.state==='completed'&&!timer.resolved)alarm();render();
+</script></html>
