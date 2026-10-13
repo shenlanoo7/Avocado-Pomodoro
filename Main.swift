@@ -165,21 +165,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandler
         case "alarm": startAlarm()
         case "silence": stopAlarm()
         case "checklist": showChecklist()
-        case "loadTimerTasks":
-            guard message.webView === webView else { return }
-            let store = taskStore
-            tasksQueue.async { [weak self] in
-                let result: [String:Any]
-                do {
-                    let tasks = try store.list().filter { !$0.checked && !$0.text.trimmingCharacters(in:.whitespacesAndNewlines).isEmpty }
-                    let data = try JSONEncoder().encode(tasks)
-                    result = ["ok":true,"tasks":try JSONSerialization.jsonObject(with:data)]
-                } catch { result = ["ok":false,"tasks":[],"error":error.localizedDescription] }
-                DispatchQueue.main.async {
-                    guard let self, let data = try? JSONSerialization.data(withJSONObject:result), let json = String(data:data,encoding:.utf8) else { return }
-                    self.webView.evaluateJavaScript("receiveTimerTasks(\(json));",completionHandler:nil)
-                }
-            }
+        case "startTask":
+            guard message.webView === checklistWebView,
+                  let name = body["name"] as? String,
+                  !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+                  let data = try? JSONSerialization.data(withJSONObject: [name]),
+                  let json = String(data: data, encoding: .utf8) else { return }
+            showTimer()
+            webView.evaluateJavaScript("startChecklistTask(\(json)[0]);", completionHandler: nil)
+
         case "qaPickerChecklist":
             guard Self.qaPicker, message.webView === checklistWebView,
                   let keys = body["keys"] as? [String], let data = try? JSONSerialization.data(withJSONObject: keys),
@@ -361,23 +355,25 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandler
     }
 
     private func exercisePickerQA(checklistKeys: String) {
-        webView.evaluateJavaScript("""
-        (()=>{
-          const expected=\(checklistKeys),original=receiveTimerTasks;
-          window.receiveTimerTasks=result=>{
-            window.receiveTimerTasks=original;original(result);
-            const keys=timerTasks.map(t=>t.path+':'+t.line),sameOpenSet=JSON.stringify(keys)===JSON.stringify(expected),
-              options=[...$('namePicker').querySelectorAll('[role=option]')],allOpenShown=options.length===expected.length+1,
-              prefilled=$('name').value==='test3',option=options.find(b=>b.textContent.includes('Native picker task'));
-            if(!option){native('qaPickerResult',{ok:false,error:'Missing native checklist task',sameOpenSet,allOpenShown,prefilled});return;}
-            const provenance=option.textContent.includes('Picker.md');option.click();
-            const selected=$('name').value==='Native picker task';$('focusMinutes').value='42';$('start').click();
-            native('qaPickerResult',{ok:result.ok&&sameOpenSet&&allOpenShown&&prefilled&&provenance&&selected&&timer.duration===2520,openCount:keys.length,sameOpenSet,allOpenShown,prefilled,provenance,selected,duration:timer.duration});
-          };
-          $('name').value='test3';$('name').click();
-        })();
-        """) { [weak self] _, error in
-            if let error { self?.writeQAReport(["ok":false,"mode":"picker","error":error.localizedDescription]) }
+        webView.evaluateJavaScript("$('name').value='test3';$('focusMinutes').value='42';") { [weak self] _, error in
+            guard let self else { return }
+            if let error { self.writeQAReport(["ok":false,"mode":"picker","error":error.localizedDescription]); return }
+            self.checklistWebView?.evaluateJavaScript("""
+            (()=>{
+              $('note').value='all';$('filter').value='all';render();
+              const expected=\(checklistKeys),buttons=[...document.querySelectorAll('.taskStart')];
+              if(buttons.length!==expected.length)throw new Error('Checklist Start count mismatch');
+              const row=[...document.querySelectorAll('.taskRow')].find(row=>row.querySelector('.taskText').textContent==='Native picker task');
+              if(!row||!row.querySelector('button'))throw new Error('Missing native checklist Start');
+              row.querySelector('button').click();
+            })();
+            """) { [weak self] _, error in
+                guard let self else { return }
+                if let error { self.writeQAReport(["ok":false,"mode":"picker","error":error.localizedDescription]); return }
+                DispatchQueue.main.asyncAfter(deadline:.now()+0.3) {
+                    self.webView.evaluateJavaScript("native('qaPickerResult',{ok:timer.state==='running'&&timer.name==='Native picker task'&&timer.duration===2520&&!document.getElementById('namePicker'),name:timer.name,duration:timer.duration,state:timer.state});")
+                }
+            }
         }
     }
 

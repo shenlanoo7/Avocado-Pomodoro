@@ -12,7 +12,7 @@ const assert=require('node:assert/strict');
  const before=await timer.evaluate(()=>JSON.stringify(timer));await timer.evaluate(()=>applyLanguage('en'));
  assert.equal(await timer.locator('#pause').textContent(),'Resume');assert.equal(await timer.evaluate(()=>JSON.stringify(timer)),before);assert.equal(await timer.locator('#pauseNote').inputValue(),'Keep this draft');
  await timer.evaluate(()=>applyLanguage('zh'));await timer.reload();assert.equal(await timer.locator('#pause').textContent(),'继续');
- await timer.evaluate(()=>{timer=new Timer();render();$('name').click();receiveTimerTasks({ok:true,tasks:[]});});assert.ok((await timer.locator('#namePicker').innerText()).includes('使用自定义名称'));
+ await timer.evaluate(()=>{timer=new Timer();render();$('name').click();});assert.equal(await timer.locator('#namePicker').count(),0);
  await timer.evaluate(()=>{timer.start('Original task',Date.now()-1500001);timer.deadline=Date.now()-1;tickTimer();$('note').value='Original completion draft';$('note').dispatchEvent(new Event('input'));});
  assert.equal(await timer.locator('#finished h2').textContent(),'专注完成');assert.ok((await timer.locator('#doneDuration').textContent()).includes('分钟'));
  await timer.evaluate(()=>{applyLanguage('en');$('log').click();nativeResult({ok:false,id:savingCompletionId,error:'disk error'});applyLanguage('zh');});
