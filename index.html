@@ -54,7 +54,8 @@ $('chooseRest').onclick=()=>{if(timer.advance()){silence();showNotes=true;$('not
 $('keepGoing').onclick=()=>{if(timer.keepGoing()){silence();showNotes=false;persist();render();}};
 function completionSnapshot(){return timer.pendingNotes[0]||(timer.state==='completed'&&timer.mode==='focus'&&!timer.resolved?timer:null);}
 function native(action,extra={}){const payload={action,...extra};if(window.webkit?.messageHandlers?.native)window.webkit.messageHandlers.native.postMessage(payload);else if(action==='save')window.nativeResult({ok:false,id:payload.id,error:t('Open the desktop app to save notes')});}
-function persist(){localStorage.setItem('avocado.timer',JSON.stringify(timer));}
+function syncNativeTimer(){native('timerState',{deadline:timer.state==='running'&&!timer.overtime?timer.deadline:null});}
+function persist(){localStorage.setItem('avocado.timer',JSON.stringify(timer));syncNativeTimer();}
 window.applyScale=()=>{document.documentElement.style.setProperty('--scale',.65);$('scale').value='0.65';};
 applyScale();
 function applySkin(skin){if(!['avocado','kirby'].includes(skin))skin='avocado';document.documentElement.dataset.skin=skin;$('body').dataset.skin=skin;$('body').setAttribute('viewBox',skin==='kirby'?'-3 0 32 42':'0 0 26 42');$('body').setAttribute('aria-label',t(skin==='kirby'?'Pixel Kirby. Drag to move. Double-click to hide.':'Pixel avocado. Drag to move. Double-click to hide.'));$('avocadoArt').style.display=skin==='avocado'?'':'none';$('kirbyArt').style.display=skin==='kirby'?'':'none';$('skin').value=skin;localStorage.setItem('avocado.skin',skin);}
@@ -108,7 +109,7 @@ window.startChecklistTask=name=>{
   if(['running','paused'].includes(timer.state)||timer.awaitingChoice||saving||pauseSavingId){notify('Finish the current timer before starting another task');return false;}
   if(!$('focusMinutes').checkValidity()){showNotes=false;render();$('focusMinutes').reportValidity();return false;}
   if(timer.state==='completed'&&timer.mode==='focus'&&!timer.resolved){timer.pendingNotes.push({id:timer.id,name:timer.name,startedAt:timer.startedAt,completedAt:timer.completedAt,plannedSeconds:timer.duration,elapsedSeconds:timer.elapsedSeconds,endedEarly:timer.endedEarly,note:$('note').value});timer.resolved=true;}
-  silence();$('name').value=name.slice(0,120);localStorage.setItem('avocado.name',$('name').value);selectedPrompt=null;return startFocus();
+  silence();$('name').value=name.slice(0,120);localStorage.setItem('avocado.name',$('name').value);selectedPrompt=null;const started=startFocus();if(started)native('checklistClose');return started;
 };
 $('start').onclick=startFocus;$('name').onkeydown=$('focusMinutes').onkeydown=e=>{if(e.key==='Enter')$('start').click();};
 $('backTimer').onclick=()=>{showNotes=false;render();};$('pendingNotes').onclick=$('setupNotes').onclick=()=>{showNotes=true;$('note').value=completionSnapshot()?.note||'';render();};
@@ -135,6 +136,6 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){$('contextMenu').hi
 function tickTimer(now=Date.now()){if(timer.tick(now)){showNotes=false;alarm();persist();render();}else if(timer.state==='running')render();}
 document.addEventListener('languagechange',()=>{if(feedbackMessage)$('feedback').textContent=t(feedbackMessage.key,feedbackMessage.values);render();applySkin($('skin').value);});
 native('languageReady',{language:uiLanguage()});
-setInterval(()=>tickTimer(),200);
-tickTimer();if(timer.state==='completed'&&!timer.resolved)alarm();render();
+const timerInterval=setInterval(()=>tickTimer(),200);
+tickTimer();if(timer.state==='completed'&&!timer.resolved)alarm();render();syncNativeTimer();
 </script></html>

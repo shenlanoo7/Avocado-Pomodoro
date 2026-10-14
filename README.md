@@ -72,6 +72,7 @@ Run `node e2e-language.cjs` to verify live switching, preference messages, reloa
 - `silence`: stops sound immediately. System output volume and mute remain unchanged.
 - `hide`: hides only the timer window; accepts messages from the timer webview and leaves the timer running.
 - `reveal`: restores and brings the timer forward on every phase start/completion, including when muted.
+- `timerState`: synchronizes the running phase's epoch-millisecond `deadline` to a native one-shot timer. A null deadline cancels it on pause, completion or overtime. Reload restores it. Native expiry reveals the window and calls `tickTimer()` even if WebKit has suspended the hidden page's JavaScript interval.
 - `save`: fields `id`, `name`, `note`, `startedAt`, `completedAt` (timestamps are JS epoch milliseconds), optionally `plannedSeconds` (whole-minute seconds, 60–10800; omitted means legacy 1500), `elapsedSeconds` (integer) and `endedEarly` (Boolean). Completion and pause saves send their own captured plan, never the current setup value or another live phase's duration. Early finishes require both `endedEarly:true` and an explicit active duration.
 - `close`: persists the frontend timer, fires lifecycle events, and terminates.
 

@@ -52,6 +52,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandler
     private var sound: NSSound?
     private var alarmRepeat: Timer?
     private var alarmStop: Timer?
+    private var completionWakeup: Timer?
     private var shuttingDown = false
     private var soundPlaybackAccepted = false
     private static var qaVisibility: Bool { CommandLine.arguments.contains("--qa-visibility") }
@@ -162,6 +163,21 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandler
         case "hide":
             guard message.webView === webView else { return }
             window.orderOut(nil)
+        case "timerState":
+            guard message.webView === webView, !shuttingDown else { return }
+            completionWakeup?.invalidate()
+            completionWakeup = nil
+            if let deadline = body["deadline"] as? Double, deadline.isFinite {
+                let wakeup = Timer(fire: Date(timeIntervalSince1970: deadline / 1000), interval: 0, repeats: false) { [weak self] _ in
+                    guard let self, !self.shuttingDown else { return }
+                    self.completionWakeup = nil
+                    // Reveal first: hidden WKWebViews can suspend their JavaScript timers.
+                    self.showTimer()
+                    self.webView.evaluateJavaScript("tickTimer();", completionHandler: nil)
+                }
+                completionWakeup = wakeup
+                RunLoop.main.add(wakeup, forMode: .common)
+            }
         case "alarm": startAlarm()
         case "silence": stopAlarm()
         case "checklist": showChecklist()
@@ -314,7 +330,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandler
         }
         let original = window.frame
         var checks: [[String:Any]] = []
-        webView.evaluateJavaScript("muted=true;timer=new Timer();timer.start('Hidden QA');timer.deadline=Date.now()+1500;persist();render();$('body').dispatchEvent(new MouseEvent('dblclick',{bubbles:true}));") { [weak self] _, error in
+        // Model WebKit suspending JavaScript intervals after the window is hidden.
+        webView.evaluateJavaScript("clearInterval(timerInterval);muted=true;timer=new Timer();timer.start('Hidden QA');timer.deadline=Date.now()+1500;persist();render();$('body').dispatchEvent(new MouseEvent('dblclick',{bubbles:true}));") { [weak self] _, error in
             guard let self else { return }
             DispatchQueue.main.asyncAfter(deadline:.now()+0.2) {
                 checks.append(["name":"double click hides without moving timer","ok":error == nil && !self.window.isVisible && self.window.frame == original])
@@ -731,6 +748,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandler
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
         guard !shuttingDown, webView != nil else { return .terminateNow }
         shuttingDown = true
+        completionWakeup?.invalidate(); completionWakeup = nil
         stopAlarm()
         // Frontend stores state on pagehide/beforeunload; WKWebView does not guarantee these on app termination.
         webView.evaluateJavaScript("if (typeof persist === 'function') persist(); window.dispatchEvent(new Event('native-close')); window.dispatchEvent(new Event('pagehide')); window.dispatchEvent(new Event('beforeunload'));") { _, _ in
